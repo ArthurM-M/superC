@@ -11,6 +11,11 @@ enum class TokenType {
     UNKNOWN
 };
 
+struct Token {
+    TokenType type;
+    std::string value;
+};
+
 TokenType identify_token(const std::string& buf) {
     return TokenType::IDENT;
 }
@@ -36,7 +41,7 @@ std::string token_type_name(TokenType type) {
 }
 
 void Lexer::tokenize(std::ifstream& file) {
-    std::vector<TokenType> tokenized_text;
+    std::vector<Token> tokenized_text;
 
     constexpr std::string_view DELIMITERS = "+-*/();,";
     constexpr std::string_view WHITESPACES = " \n\t";
@@ -45,15 +50,15 @@ void Lexer::tokenize(std::ifstream& file) {
     while(file.get(c)) {
         if(WHITESPACES.find(c) != std::string_view::npos) {
             if(!buf.empty()) {
-                tokenized_text.push_back(identify_token(buf));
+                tokenized_text.push_back({identify_token(buf), buf});
                 buf.clear();
             }
         } else if (DELIMITERS.find(c) != std::string_view::npos){
             if(!buf.empty()) {
-                tokenized_text.push_back(identify_token(buf));
+                tokenized_text.push_back({identify_token(buf), buf});
                 buf.clear();
             }
-            tokenized_text.push_back(identify_token(c));
+            tokenized_text.push_back({identify_token(c), ""});
 
         } else {
             buf.push_back(c);
@@ -61,14 +66,14 @@ void Lexer::tokenize(std::ifstream& file) {
     }
     if (!buf.empty()) {
         if(buf.size() == 1) {
-            tokenized_text.push_back(identify_token(buf[0]));
+            tokenized_text.push_back({identify_token(buf[0]), ""});
         } else {
-            tokenized_text.push_back(identify_token(buf));
+            tokenized_text.push_back({identify_token(buf), buf});
         }
     }
 
     for(auto x : tokenized_text) {
-        std::cout << token_type_name(x) << " ";
+        std::cout << token_type_name(x.type) << "(" << x.value << ") ";
     }
 
 }
