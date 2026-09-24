@@ -9,6 +9,12 @@ enum class TokenType {
     IDENT,
     ADD,
     SUB,
+    MULT,
+    DIV,
+    LEFT_PAR,
+    RIGHT_PAR,
+    COMMA,
+    SEMICOLON,
     UNKNOWN
 };
 
@@ -32,13 +38,17 @@ TokenType identify_token(const std::string& buf) {
 }
 
 TokenType identify_token(char c) {
-    if(c == '+'){
-        return TokenType::ADD;
+    switch (c) {
+        case '+': return TokenType::ADD;
+        case '-': return TokenType::SUB;
+        case '*': return TokenType::MULT;
+        case '/': return TokenType::DIV;
+        case '(': return TokenType::LEFT_PAR;
+        case ')': return TokenType::RIGHT_PAR;
+        case ',': return TokenType::COMMA;
+        case ';': return TokenType::SEMICOLON;
+        default:  return TokenType::UNKNOWN;
     }
-    if(c == '-'){
-        return TokenType::SUB;
-    }
-    return TokenType::UNKNOWN;
 }
 
 std::string token_type_name(TokenType type) {
@@ -46,7 +56,13 @@ std::string token_type_name(TokenType type) {
         case TokenType::IDENT:      return "IDENT";
         case TokenType::ADD:        return "ADD";
         case TokenType::SUB:        return "SUB";
-        case TokenType::NUMBER:        return "NUMBER";
+        case TokenType::MULT:       return "MULT";
+        case TokenType::DIV:        return "DIV";
+        case TokenType::NUMBER:     return "NUMBER";
+        case TokenType::LEFT_PAR:        return "LEFT_PAR";
+        case TokenType::RIGHT_PAR:       return "RIGHT_PAR";
+        case TokenType::COMMA:       return "COMMA";
+        case TokenType::SEMICOLON:       return "SEMICOLON";
         case TokenType::UNKNOWN:    return "UNKNOWN";
     }
     return "UNKNOWN";
