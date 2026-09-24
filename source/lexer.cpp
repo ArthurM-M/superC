@@ -5,6 +5,7 @@
 #include <string>
 
 enum class TokenType {
+    NUMBER,
     IDENT,
     ADD,
     SUB,
@@ -16,7 +17,17 @@ struct Token {
     std::string value;
 };
 
+bool is_number(const std::string& v) {
+    for(size_t t = 0; t < v.size(); t++) {
+        if(v[t] < '0' || v[t] > '9') {
+            return false;
+        }
+    }
+    return true;
+}
+
 TokenType identify_token(const std::string& buf) {
+    if(is_number(buf)) return TokenType::NUMBER;
     return TokenType::IDENT;
 }
 
@@ -35,6 +46,7 @@ std::string token_type_name(TokenType type) {
         case TokenType::IDENT:      return "IDENT";
         case TokenType::ADD:        return "ADD";
         case TokenType::SUB:        return "SUB";
+        case TokenType::NUMBER:        return "NUMBER";
         case TokenType::UNKNOWN:    return "UNKNOWN";
     }
     return "UNKNOWN";
