@@ -1,0 +1,74 @@
+#include "lexer.h"
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+
+enum class TokenType {
+    IDENT,
+    ADD,
+    SUB,
+    UNKNOWN
+};
+
+TokenType identify_token(const std::string& buf) {
+    return TokenType::IDENT;
+}
+
+TokenType identify_token(char c) {
+    if(c == '+'){
+        return TokenType::ADD;
+    }
+    if(c == '-'){
+        return TokenType::SUB;
+    }
+    return TokenType::UNKNOWN;
+}
+
+std::string token_type_name(TokenType type) {
+    switch (type) {
+        case TokenType::IDENT:      return "IDENT";
+        case TokenType::ADD:        return "ADD";
+        case TokenType::SUB:        return "SUB";
+        case TokenType::UNKNOWN:    return "UNKNOWN";
+    }
+    return "UNKNOWN";
+}
+
+void Lexer::tokenize(std::ifstream& file) {
+    std::vector<TokenType> tokenized_text;
+
+    constexpr std::string_view DELIMITERS = "+-*/();,";
+    constexpr std::string_view WHITESPACES = " \n\t";
+
+    char c; std::string buf;
+    while(file.get(c)) {
+        if(WHITESPACES.find(c) != std::string_view::npos) {
+            if(!buf.empty()) {
+                tokenized_text.push_back(identify_token(buf));
+                buf.clear();
+            }
+        } else if (DELIMITERS.find(c) != std::string_view::npos){
+            if(!buf.empty()) {
+                tokenized_text.push_back(identify_token(buf));
+                buf.clear();
+            }
+            tokenized_text.push_back(identify_token(c));
+
+        } else {
+            buf.push_back(c);
+        }
+    }
+    if (!buf.empty()) {
+        if(buf.size() == 1) {
+            tokenized_text.push_back(identify_token(buf[0]));
+        } else {
+            tokenized_text.push_back(identify_token(buf));
+        }
+    }
+
+    for(auto x : tokenized_text) {
+        std::cout << token_type_name(x) << " ";
+    }
+
+}
