@@ -18,9 +18,14 @@ enum class TokenType {
     UNKNOWN
 };
 
+struct TokenPosition {
+    std::size_t x, y;
+};
+
 struct Token {
     TokenType type;
     std::string value;
+    TokenPosition position;
 };
 
 bool is_number(const std::string& v) {
@@ -77,19 +82,24 @@ void Lexer::tokenize(std::ifstream& file) {
     constexpr std::string_view DELIMITERS = "+-*/();,";
     constexpr std::string_view WHITESPACES = " \n\t";
 
+    std::size_t pos_x = 1, pos_y = 1;
     char c; std::string buf;
     while(file.get(c)) {
         if(WHITESPACES.find(c) != std::string_view::npos) {
             if(!buf.empty()) {
-                tokenized_text.push_back({identify_token(buf), buf});
+                tokenized_text.push_back({identify_token(buf), buf, {pos_x++, pos_y}});
                 buf.clear();
+            }
+            if(c == '\n') {
+                pos_x = 1;
+                pos_y++;
             }
         } else if (DELIMITERS.find(c) != std::string_view::npos){
             if(!buf.empty()) {
-                tokenized_text.push_back({identify_token(buf), buf});
+                tokenized_text.push_back({identify_token(buf), buf, {pos_x++, pos_y}});
                 buf.clear();
             }
-            tokenized_text.push_back({identify_token(c), ""});
+            tokenized_text.push_back({identify_token(c), "", {pos_x++, pos_y}});
 
         } else {
             buf.push_back(c);
@@ -97,14 +107,15 @@ void Lexer::tokenize(std::ifstream& file) {
     }
     if (!buf.empty()) {
         if(DELIMITERS.find(c) != std::string_view::npos) {
-            tokenized_text.push_back({identify_token(buf[0]), ""});
+            tokenized_text.push_back({identify_token(buf[0]), "", {pos_x++, pos_y}});
         } else {
-            tokenized_text.push_back({identify_token(buf), buf});
+            tokenized_text.push_back({identify_token(buf), buf, {pos_x++, pos_y}});
         }
     }
 
     for(auto x : tokenized_text) {
-        std::cout << token_type_name(x.type) << "(" << x.value << ") ";
+        std::cout << token_type_name(x.type) << "(" << x.value
+                  << ") pos x:" << x.position.x << " pos y:" << x.position.y << "\n";
     }
 
 }
