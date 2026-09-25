@@ -96,7 +96,7 @@ void Lexer::tokenize(std::ifstream& file) {
         }
     }
     if (!buf.empty()) {
-        if(buf.size() == 1) {
+        if(DELIMITERS.find(c) != std::string_view::npos) {
             tokenized_text.push_back({identify_token(buf[0]), ""});
         } else {
             tokenized_text.push_back({identify_token(buf), buf});
