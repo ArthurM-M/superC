@@ -28,13 +28,20 @@ struct Token {
     TokenPosition position;
 };
 
-bool is_number(const std::string& v) {
+bool is_number(const std::string& v) {  //Requires non-empty string
     if(v[0] == '.' || v[v.size() - 1] == '.') {
         return false;
     }
+    bool one_dot = false;
     for(size_t t = 0; t < v.size(); t++) {
         if((v[t] < '0' || v[t] > '9') && v[t] != '.') {
             return false;
+        }
+        if(one_dot && v[t] == '.') {
+            return false;
+        }
+        if(v[t] == '.') {
+            one_dot = true;
         }
     }
     return true;
@@ -90,7 +97,7 @@ void Lexer::tokenize(std::ifstream& file) {
                 tokenized_text.push_back({identify_token(buf), buf, {pos_x++, pos_y}});
                 buf.clear();
             }
-            if(c == '\n') {
+            if(c == '\n') { //Next line
                 pos_x = 1;
                 pos_y++;
             }
