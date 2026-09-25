@@ -24,8 +24,11 @@ struct Token {
 };
 
 bool is_number(const std::string& v) {
+    if(v[0] == '.' || v[v.size() - 1] == '.') {
+        return false;
+    }
     for(size_t t = 0; t < v.size(); t++) {
-        if(v[t] < '0' || v[t] > '9') {
+        if((v[t] < '0' || v[t] > '9') && v[t] != '.') {
             return false;
         }
     }
