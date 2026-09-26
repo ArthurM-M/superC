@@ -4,19 +4,40 @@
 #include <fstream>
 #include <string>
 
+// X(EnumName, Symbol)
+#define SINGLE_SYMBOL_TOKENS(X) \
+    X(ADD,          '+')  \
+    X(SUB,          '-')  \
+    X(MULT,         '*')  \
+    X(DIV,          '/')  \
+    X(ASSIGN,       '=')  \
+    X(LEFT_PAR,     '(')  \
+    X(RIGHT_PAR,    ')')  \
+    X(COMMA,        ',')  \
+    X(SEMICOLON,    ';')
+
+// X(EnumName, Symbol)
+#define MULTI_SYMBOL_TOKENS(X) \
+    X(EQ,   "==")
+
+//X(EnumName)
+#define SPECIAL_TOKENS(X) \
+    X(NUMBER)  \
+    X(IDENT)   \
+    X(UNKNOWN)
+
+#define AS_ENUM_SYM(name, sym) name,
+#define AS_ENUM_SPE(name) name,
+
 enum class TokenType {
-    NUMBER,
-    IDENT,
-    ADD,
-    SUB,
-    MULT,
-    DIV,
-    LEFT_PAR,
-    RIGHT_PAR,
-    COMMA,
-    SEMICOLON,
-    UNKNOWN
+    SINGLE_SYMBOL_TOKENS(AS_ENUM_SYM)
+    MULTI_SYMBOL_TOKENS(AS_ENUM_SYM)
+    SPECIAL_TOKENS(AS_ENUM_SPE)
 };
+
+#undef AS_ENUM_SYM
+#undef AS_ENUM_SPE
+
 
 struct TokenPosition {
     std::size_t x, y;
@@ -27,6 +48,7 @@ struct Token {
     std::string value;
     TokenPosition position;
 };
+
 
 bool is_number(const std::string& v) {  //Requires non-empty string
     if(v[0] == '.' || v[v.size() - 1] == '.') {
@@ -52,41 +74,38 @@ TokenType identify_token(const std::string& buf) {
     return TokenType::IDENT;
 }
 
+#define AS_CASE_S_SYM(name, sym) case sym: return TokenType::name;
+
+//Identify single character tokens
 TokenType identify_token(char c) {
     switch (c) {
-        case '+': return TokenType::ADD;
-        case '-': return TokenType::SUB;
-        case '*': return TokenType::MULT;
-        case '/': return TokenType::DIV;
-        case '(': return TokenType::LEFT_PAR;
-        case ')': return TokenType::RIGHT_PAR;
-        case ',': return TokenType::COMMA;
-        case ';': return TokenType::SEMICOLON;
+        SINGLE_SYMBOL_TOKENS(AS_CASE_S_SYM)
         default:  return TokenType::UNKNOWN;
     }
 }
 
-std::string token_type_name(TokenType type) {
+#undef AS_CASE_S_SYM
+
+
+#define AS_CASE_SYM(name, sym) case TokenType::name: return #name;
+#define AS_CASE_SPE(name) case TokenType::name: return #name;
+
+std::string token_to_str(TokenType type) {
     switch (type) {
-        case TokenType::IDENT:      return "IDENT";
-        case TokenType::ADD:        return "ADD";
-        case TokenType::SUB:        return "SUB";
-        case TokenType::MULT:       return "MULT";
-        case TokenType::DIV:        return "DIV";
-        case TokenType::NUMBER:     return "NUMBER";
-        case TokenType::LEFT_PAR:        return "LEFT_PAR";
-        case TokenType::RIGHT_PAR:       return "RIGHT_PAR";
-        case TokenType::COMMA:       return "COMMA";
-        case TokenType::SEMICOLON:       return "SEMICOLON";
-        case TokenType::UNKNOWN:    return "UNKNOWN";
+        SINGLE_SYMBOL_TOKENS(AS_CASE_SYM)
+        MULTI_SYMBOL_TOKENS(AS_CASE_SYM)
+        SPECIAL_TOKENS(AS_CASE_SPE)
     }
     return "UNKNOWN";
 }
 
+#undef AS_CASE_SYM
+#undef AS_CASE_SPE
+
 void Lexer::tokenize(std::ifstream& file) {
     std::vector<Token> tokenized_text;
 
-    constexpr std::string_view DELIMITERS = "+-*/();,";
+    constexpr std::string_view DELIMITERS = "+-*/();,=";
     constexpr std::string_view WHITESPACES = " \n\t";
 
     std::size_t pos_x = 1, pos_x_start = 1, pos_y = 1;
@@ -122,7 +141,7 @@ void Lexer::tokenize(std::ifstream& file) {
     }
 
     for(auto x : tokenized_text) {
-        std::cout << token_type_name(x.type) << "(" << x.value
+        std::cout << token_to_str(x.type) << "(" << x.value
                   << ") pos x:" << x.position.x << " pos y:" << x.position.y << "\n";
     }
 
