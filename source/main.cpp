@@ -11,5 +11,5 @@ int main() {
         return 1;
     }
     print_tokens(Lexer::tokenize(file));
-
+    return 0;
 }
