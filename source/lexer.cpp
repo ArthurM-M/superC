@@ -89,34 +89,40 @@ void Lexer::tokenize(std::ifstream& file) {
     constexpr std::string_view DELIMITERS = "+-*/();,";
     constexpr std::string_view WHITESPACES = " \n\t";
 
-    std::size_t pos_x = 1, pos_y = 1;
+    std::size_t pos_x = 1, pos_x_start = 1, pos_y = 1;
     char c; std::string buf;
     while(file.get(c)) {
         if(WHITESPACES.find(c) != std::string_view::npos) {
             if(!buf.empty()) {
-                tokenized_text.push_back({identify_token(buf), buf, {pos_x++, pos_y}});
+                tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
                 buf.clear();
             }
-            if(c == '\n') { //Next line
-                pos_x = 1;
+            if(c == '\n') { //Next line positions
+                pos_x = 0;
                 pos_y++;
             }
+
         } else if (DELIMITERS.find(c) != std::string_view::npos){
             if(!buf.empty()) {
-                tokenized_text.push_back({identify_token(buf), buf, {pos_x++, pos_y}});
+                tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
                 buf.clear();
             }
-            tokenized_text.push_back({identify_token(c), "", {pos_x++, pos_y}});
+            tokenized_text.push_back({identify_token(c), "", {pos_x, pos_y}});  //Tokenize char
 
         } else {
+            if(buf.empty()) {
+                pos_x_start = pos_x;
+            }
             buf.push_back(c);
         }
+        pos_x++;
     }
+
     if (!buf.empty()) {
         if(DELIMITERS.find(c) != std::string_view::npos) {
-            tokenized_text.push_back({identify_token(buf[0]), "", {pos_x++, pos_y}});
+            tokenized_text.push_back({identify_token(buf[0]), "", {pos_x_start, pos_y}});
         } else {
-            tokenized_text.push_back({identify_token(buf), buf, {pos_x++, pos_y}});
+            tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
         }
     }
 
