@@ -107,7 +107,7 @@ void Lexer::tokenize(std::ifstream& file) {
                 tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
                 buf.clear();
             }
-            tokenized_text.push_back({identify_token(c), "", {pos_x, pos_y}});  //Tokenize char
+            tokenized_text.push_back({identify_token(c), std::string(1, c), {pos_x, pos_y}});  //Tokenize char
 
         } else {
             if(buf.empty()) {
@@ -120,7 +120,7 @@ void Lexer::tokenize(std::ifstream& file) {
 
     if (!buf.empty()) {
         if(DELIMITERS.find(c) != std::string_view::npos) {
-            tokenized_text.push_back({identify_token(buf[0]), "", {pos_x_start, pos_y}});
+            tokenized_text.push_back({identify_token(buf[0]), std::string(1, c), {pos_x_start, pos_y}});
         } else {
             tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
         }
