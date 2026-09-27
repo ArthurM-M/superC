@@ -62,7 +62,7 @@ struct Token {
     TokenPosition position;
 };
 
-void print_tokens(const std::vector<Token> tokenized_text);
+void print_tokens(const std::vector<Token>& tokenized_text);
 
 namespace Lexer {
     std::vector<Token> tokenize(std::ifstream& file);

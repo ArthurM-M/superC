@@ -94,7 +94,7 @@ std::string token_to_str(TokenType type) {
 #undef AS_CASE_SYM
 #undef AS_CASE_SPE
 
-void print_tokens(std::vector<Token> tokenized_text) {
+void print_tokens(const std::vector<Token>& tokenized_text) {
     for(auto x : tokenized_text) {
         std::cout << token_to_str(x.type) << "(" << x.value
                   << ") pos x:" << x.position.x << " pos y:" << x.position.y << "\n";
