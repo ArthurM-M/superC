@@ -23,13 +23,26 @@ bool is_number(const std::string& v) {  //Requires non-empty string
     return true;
 }
 
+bool is_ident(const std::string& v) {   //Requires non-empty string
+    if(v[0] >= '0' && v[0] <= '9') {
+        return false;
+    }
+    for(size_t t = 0; t < v.size(); t++) {  
+        if((v[t] < 'a' || v[t] > 'z') && (v[t] < 'A' || v[t] > 'Z') && (v[t] < '0' || v[t] > '9') && v[t] != '_') {
+            return false;
+        }
+    }
+    return true;
+}
+
 #define AS_IF_SYM(name, sym) if (buf == sym) return TokenType::name;
 
 //Identify multi character tokens
 TokenType identify_token(const std::string& buf) {
     MULTI_SYMBOL_TOKENS(AS_IF_SYM)
     if(is_number(buf)) return TokenType::NUMBER;
-    return TokenType::IDENT;
+    if(is_ident(buf)) return TokenType::IDENT;
+    return TokenType::UNKNOWN;
 }
 
 #undef AS_IF_SYM
