@@ -23,15 +23,21 @@ bool is_number(const std::string& v) {  //Requires non-empty string
     return true;
 }
 
+#define AS_IF_SYM(name, sym) if (buf == sym) return TokenType::name;
+
+//Identify multi character tokens
 TokenType identify_token(const std::string& buf) {
+    MULTI_SYMBOL_TOKENS(AS_IF_SYM)
     if(is_number(buf)) return TokenType::NUMBER;
     return TokenType::IDENT;
 }
 
+#undef AS_IF_SYM
+
 #define AS_CASE_S_SYM(name, sym) case sym: return TokenType::name;
 
 //Identify single character tokens
-TokenType identify_token(char c) {
+TokenType identify_token(char c) { 
     switch (c) {
         SINGLE_SYMBOL_TOKENS(AS_CASE_S_SYM)
         default:  return TokenType::UNKNOWN;
@@ -42,7 +48,7 @@ TokenType identify_token(char c) {
 
 #define AS_CASE_SYM(name, sym) case sym: return true;
 
-bool is_symbol(char c) {
+bool is_s_symbol(char c) {
     switch (c) {
         SINGLE_SYMBOL_TOKENS(AS_CASE_SYM)
     }
@@ -50,6 +56,15 @@ bool is_symbol(char c) {
 }
 
 #undef AS_CASE_SYM
+
+#define AS_IF_SYM(name, sym) if (s == sym) return true;
+
+bool is_m_symbol(const std::string& s) {
+    MULTI_SYMBOL_TOKENS(AS_IF_SYM)
+    return false;
+}
+
+#undef AS_IF_SYM
 
 #define AS_CASE_SYM(name, sym) case TokenType::name: return #name;
 #define AS_CASE_SPE(name) case TokenType::name: return #name;
@@ -81,7 +96,7 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
     char c; std::string buf;
     while(file.get(c)) {
         if(std::isspace(c)) {
-            if(!buf.empty()) {
+            if(!buf.empty()) {  //Push buffer
                 tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
                 buf.clear();
             }
@@ -90,13 +105,34 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
                 pos_y++;
             }
 
-        } else if (is_symbol(c)){
-            if(!buf.empty()) {
+        } else if (is_s_symbol(c)){
+            if(!buf.empty()) {  //Push buffer
                 tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
                 buf.clear();
             }
-            tokenized_text.push_back({identify_token(c), std::string(1, c), {pos_x, pos_y}});  //Tokenize char
+            //Tokenize char
 
+            int next = file.peek();
+            auto sym = std::string(1, c);
+            while(next != EOF) {
+                    if (std::isspace(static_cast<char>(next))) {
+                    break;
+                }
+
+                sym += static_cast<char>(next);
+                if(is_m_symbol(sym)) {
+                    file.get(c);
+                    next = file.peek();
+                } else {
+                    break;
+                }
+            }
+            
+            if(sym.size() == 1) {
+                tokenized_text.push_back({identify_token(c), std::string(1, c), {pos_x, pos_y}}); 
+            } else {
+                tokenized_text.push_back({identify_token(sym), sym, {pos_x, pos_y}}); 
+            }
         } else {
             if(buf.empty()) {   //Update token x position
                 pos_x_start = pos_x;
