@@ -110,29 +110,29 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
                 tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
                 buf.clear();
             }
+
             //Tokenize char
-
             int next = file.peek();
-            auto sym = std::string(1, c);
+            std::string sym;
+            auto aux = std::string(1, c);
             while(next != EOF) {
-                    if (std::isspace(static_cast<char>(next))) {
-                    break;
-                }
-
-                sym += static_cast<char>(next);
-                if(is_m_symbol(sym)) {
+                aux += static_cast<char>(next);
+                if(is_m_symbol(aux)) {
+                    sym = aux;
                     file.get(c);
                     next = file.peek();
+                    pos_x++;
                 } else {
                     break;
                 }
             }
             
-            if(sym.size() == 1) {
+            if(sym.empty()) {
                 tokenized_text.push_back({identify_token(c), std::string(1, c), {pos_x, pos_y}}); 
             } else {
                 tokenized_text.push_back({identify_token(sym), sym, {pos_x, pos_y}}); 
             }
+            
         } else {
             if(buf.empty()) {   //Update token x position
                 pos_x_start = pos_x;
