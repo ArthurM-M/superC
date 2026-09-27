@@ -40,6 +40,16 @@ TokenType identify_token(char c) {
 
 #undef AS_CASE_S_SYM
 
+#define AS_CASE_SYM(name, sym) case sym: return true;
+
+bool is_symbol(char c) {
+    switch (c) {
+        SINGLE_SYMBOL_TOKENS(AS_CASE_SYM)
+    }
+    return false;
+}
+
+#undef AS_CASE_SYM
 
 #define AS_CASE_SYM(name, sym) case TokenType::name: return #name;
 #define AS_CASE_SPE(name) case TokenType::name: return #name;
@@ -63,16 +73,14 @@ void print_tokens(std::vector<Token> tokenized_text) {
     }
 }
 
+
 std::vector<Token> Lexer::tokenize(std::ifstream& file) {
     std::vector<Token> tokenized_text;
-
-    constexpr std::string_view DELIMITERS = "+-*/();,=";
-    constexpr std::string_view WHITESPACES = " \n\t";
 
     std::size_t pos_x = 1, pos_x_start = 1, pos_y = 1;
     char c; std::string buf;
     while(file.get(c)) {
-        if(WHITESPACES.find(c) != std::string_view::npos) {
+        if(std::isspace(c)) {
             if(!buf.empty()) {
                 tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
                 buf.clear();
@@ -82,7 +90,7 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
                 pos_y++;
             }
 
-        } else if (DELIMITERS.find(c) != std::string_view::npos){
+        } else if (is_symbol(c)){
             if(!buf.empty()) {
                 tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
                 buf.clear();
@@ -90,7 +98,7 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
             tokenized_text.push_back({identify_token(c), std::string(1, c), {pos_x, pos_y}});  //Tokenize char
 
         } else {
-            if(buf.empty()) {
+            if(buf.empty()) {   //Update token x position
                 pos_x_start = pos_x;
             }
             buf.push_back(c);
@@ -100,6 +108,5 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
     if (!buf.empty()) { //Tokenize the last string (chars processed in loop)
         tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
     }
-
     return tokenized_text;
 }
