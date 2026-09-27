@@ -7,19 +7,32 @@
 
 // X(EnumName, Symbol)
 #define SINGLE_SYMBOL_TOKENS(X) \
-    X(ADD,          '+')  \
-    X(SUB,          '-')  \
-    X(MULT,         '*')  \
-    X(DIV,          '/')  \
-    X(ASSIGN,       '=')  \
-    X(LEFT_PAR,     '(')  \
-    X(RIGHT_PAR,    ')')  \
-    X(COMMA,        ',')  \
+    X(ADD,          '+') \
+    X(SUB,          '-') \
+    X(MULT,         '*') \
+    X(DIV,          '/') \
+    X(BIT_AND,       '&') \
+    X(BIT_OR,        '|') \
+    X(BIT_NOT,      '~') \
+    X(NOT,           '!') \
+    X(ASSIGN,       '=') \
+    X(LESS,          '<') \
+    X(GREATER,       '>') \
+    X(LEFT_PAR,     '(') \
+    X(RIGHT_PAR,    ')') \
+    X(COMMA,        ',') \
     X(SEMICOLON,    ';')
 
 // X(EnumName, Symbol)
 #define MULTI_SYMBOL_TOKENS(X) \
-    X(EQ,   "==")
+    X(EQ,   "==") \
+    X(NEQ,  "!=") \
+    X(GEQ,  ">=") \
+    X(LEQ,  "<=") \
+    X(AND,  "&&") \
+    X(OR,   "||") \
+    X(SHL,  "<<") \
+    X(SHR,  ">>")
 
 //X(EnumName)
 #define SPECIAL_TOKENS(X) \
