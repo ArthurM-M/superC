@@ -157,5 +157,6 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
     if (!buf.empty()) { //Tokenize the last string (chars processed in loop)
         tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
     }
+    tokenized_text.push_back({TokenType::END_OF_FILE, "EOF", {pos_x, pos_y}});
     return tokenized_text;
 }

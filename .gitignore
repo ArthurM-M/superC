@@ -2,3 +2,5 @@ Makefile
 /bin
 *.o
 *.txt
+source/parser.cpp
+source/parser.h

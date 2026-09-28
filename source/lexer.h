@@ -38,7 +38,8 @@
 #define SPECIAL_TOKENS(X) \
     X(NUMBER)  \
     X(IDENT)   \
-    X(UNKNOWN)
+    X(UNKNOWN) \
+    X(END_OF_FILE)
 
 #define AS_ENUM_SYM(name, sym) name,
 #define AS_ENUM_SPE(name) name,
