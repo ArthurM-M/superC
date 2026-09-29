@@ -29,15 +29,16 @@ std::unique_ptr<Node> parse_expression(size_t& cur, const std::vector<Token>& to
     if(tokens[cur].type != TokenType::IDENT && tokens[cur].type != TokenType::NUMBER) {
         //treat prefix case
     } else {
-        left = std::make_unique<Node>(tokens[cur++], nullptr, nullptr);
+        left = std::make_unique<Node>(tokens[cur++]);
     }
 
-    while(cur < tokens.size() && precedence(tokens[cur].type) > min_precedence) {
-        Token op = tokens[cur];
+    while(cur < tokens.size()) {
         int op_precedence = precedence(tokens[cur].type);
-        cur++;
+        if(op_precedence <= min_precedence) break;
 
-        std::unique_ptr<Node> right = parse_expression(cur, tokens, op_precedence);
+        Token op = tokens[cur++];
+
+        auto right = parse_expression(cur, tokens, op_precedence);
         left = std::make_unique<Node>(op, std::move(left), std::move(right));
     }
     return left;
@@ -47,17 +48,16 @@ std::unique_ptr<Node> parse_statement(size_t& cur, const std::vector<Token>& tok
     //if tokens[cur] == keyword -> parse_specific_keyword()
     //else:
     auto root = parse_expression(cur, tokens);
-
     return root;
 }
 
 void print_ast(const std::unique_ptr<Node>& node, int depth = 0) {
-    if (!node)
-        return;
+    if (!node)  return;
 
-    for (int i = 0; i < depth; i++)
+    for (int i = 0; i < depth; i++) {
         std::cout << "    ";
-
+    }
+    
     std::cout << "|-- " << node->tk.value << '\n';
 
     print_ast(node->left, depth + 1);
@@ -68,10 +68,8 @@ void print_ast(const std::unique_ptr<Node>& node, int depth = 0) {
 std::unique_ptr<Node> Parser::generate_ast(const std::vector<Token>& tokens) {
     if(tokens.empty()) return nullptr;
 
-    std::unique_ptr<Node> root = std::make_unique<Node>(tokens[0], nullptr, nullptr);
     size_t cur = 0;
-
-    root = parse_statement(cur, tokens);
+    auto root = parse_statement(cur, tokens);
 
     print_ast(root);
     return root;
