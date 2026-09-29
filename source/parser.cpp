@@ -1,4 +1,8 @@
 #include "parser.h"
+bool is_operand(TokenType type) {
+    if(type == TokenType::IDENT || type == TokenType::NUMBER) return true;
+    return false;
+}
 
 int precedence(TokenType type) {
     switch (type) {
@@ -26,10 +30,10 @@ std::unique_ptr<Node> parse_expression(size_t& cur, const std::vector<Token>& to
     std::unique_ptr<Node> left;
     if (cur >= tokens.size()) return nullptr;
 
-    if(tokens[cur].type != TokenType::IDENT && tokens[cur].type != TokenType::NUMBER) {
-        //treat prefix case
-    } else {
+    if(is_operand(tokens[cur].type)) {
         left = std::make_unique<Node>(tokens[cur++]);
+    } else {
+        //treat prefix case
     }
 
     while(cur < tokens.size()) {
@@ -47,8 +51,7 @@ std::unique_ptr<Node> parse_expression(size_t& cur, const std::vector<Token>& to
 std::unique_ptr<Node> parse_statement(size_t& cur, const std::vector<Token>& tokens) {
     //if tokens[cur] == keyword -> parse_specific_keyword()
     //else:
-    auto root = parse_expression(cur, tokens);
-    return root;
+    return parse_expression(cur, tokens);
 }
 
 void print_ast(const std::unique_ptr<Node>& node, int depth = 0) {
