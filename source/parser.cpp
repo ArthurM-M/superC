@@ -26,15 +26,27 @@ int precedence(TokenType type) {
     }
 }
 
-std::unique_ptr<Node> parse_expression(size_t& cur, const std::vector<Token>& tokens, int min_precedence = 0) {
-    std::unique_ptr<Node> left;
+std::unique_ptr<Node> parse_primary(size_t& cur, const std::vector<Token>& tokens) {
+    if(is_operand(tokens[cur].type)) {
+        return std::make_unique<Node>(tokens[cur++]);
+    }
+    if(tokens[cur].type == TokenType::LEFT_PAR) {
+        cur++;
+        auto expr = parse_expression(cur, tokens);
+        if(expr == nullptr || tokens[cur].type != TokenType::RIGHT_PAR) {
+            std::cout << "Expected RIGHT_PAR";
+        } else {
+            cur++;
+        }
+        return expr;
+    }
+    return nullptr;
+}
+
+std::unique_ptr<Node> parse_expression(size_t& cur, const std::vector<Token>& tokens, int min_precedence) {
     if (cur >= tokens.size()) return nullptr;
 
-    if(is_operand(tokens[cur].type)) {
-        left = std::make_unique<Node>(tokens[cur++]);
-    } else {
-        //treat prefix case
-    }
+    auto left = parse_primary(cur, tokens);
 
     while(cur < tokens.size()) {
         int op_precedence = precedence(tokens[cur].type);

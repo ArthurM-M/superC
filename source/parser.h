@@ -17,6 +17,8 @@ struct Node {
           right(std::move(right)) {}
 };
 
+std::unique_ptr<Node> parse_expression(size_t& cur, const std::vector<Token>& tokens, int min_precedence = 0);
+
 namespace Parser {
     std::unique_ptr<Node> generate_ast(const std::vector<Token>& tokenized_text);
 }
