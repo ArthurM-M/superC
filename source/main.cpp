@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "parser.h"
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -10,6 +11,8 @@ int main() {
         std::cout << "Erro ao abrir arquivo\n";
         return 1;
     }
-    print_tokens(Lexer::tokenize(file));
+    auto tokens = Lexer::tokenize(file);
+    print_tokens(tokens);
+    Parser::generate_ast(tokens);
     return 0;
 }
