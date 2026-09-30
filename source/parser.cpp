@@ -1,8 +1,4 @@
 #include "parser.h"
-bool is_operand(TokenType type) {
-    if(type == TokenType::IDENT || type == TokenType::NUMBER) return true;
-    return false;
-}
 
 int precedence(TokenType type) {
     switch (type) {
@@ -26,6 +22,11 @@ int precedence(TokenType type) {
     }
 }
 
+bool is_operand(TokenType type) {
+    if(type == TokenType::IDENT || type == TokenType::NUMBER) return true;
+    return false;
+}
+
 std::unique_ptr<Node> parse_primary(size_t& cur, const std::vector<Token>& tokens) {
     if(is_operand(tokens[cur].type)) {
         return std::make_unique<Node>(tokens[cur++]);
@@ -34,13 +35,25 @@ std::unique_ptr<Node> parse_primary(size_t& cur, const std::vector<Token>& token
         cur++;
         auto expr = parse_expression(cur, tokens);
         if(expr == nullptr || tokens[cur].type != TokenType::RIGHT_PAR) {
-            std::cout << "Expected RIGHT_PAR";
+            std::cout << "Expected RIGHT_PAR";  //Placeholder
         } else {
             cur++;
         }
         return expr;
     }
-    return nullptr;
+
+    if(tokens[cur].type == TokenType::ADD || tokens[cur].type == TokenType::SUB) {
+        auto op = tokens[cur++];
+        auto next = parse_primary(cur, tokens);
+
+        if(next == nullptr) {
+        std::cout << "Expected OPERAND";    //Placeholder
+        return nullptr;
+        }
+
+        return std::make_unique<UNode>(std::move(op), std::move(next));
+    }
+    return nullptr; //Placeholder
 }
 
 std::unique_ptr<Node> parse_expression(size_t& cur, const std::vector<Token>& tokens, int min_precedence) {
@@ -67,16 +80,20 @@ std::unique_ptr<Node> parse_statement(size_t& cur, const std::vector<Token>& tok
 }
 
 void print_ast(const std::unique_ptr<Node>& node, int depth = 0) {
-    if (!node)  return;
+    if (!node) return;
 
     for (int i = 0; i < depth; i++) {
         std::cout << "    ";
     }
-    
+
     std::cout << "|-- " << node->tk.value << '\n';
 
-    print_ast(node->left, depth + 1);
-    print_ast(node->right, depth + 1);
+    if (auto* unode = dynamic_cast<UNode*>(node.get())) {
+        print_ast(unode->child, depth + 1);
+    } else {
+        print_ast(node->left, depth + 1);
+        print_ast(node->right, depth + 1);
+    }
 }
 
 
