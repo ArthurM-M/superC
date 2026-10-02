@@ -41,18 +41,6 @@ std::unique_ptr<Node> parse_primary(size_t& cur, const std::vector<Token>& token
         }
         return expr;
     }
-
-    if(tokens[cur].type == TokenType::ADD || tokens[cur].type == TokenType::SUB) {
-        auto op = tokens[cur++];
-        auto next = parse_primary(cur, tokens);
-
-        if(next == nullptr) {
-        std::cout << "Expected OPERAND";    //Placeholder
-        return nullptr;
-        }
-
-        return std::make_unique<UNode>(std::move(op), std::move(next));
-    }
     return nullptr; //Placeholder
 }
 
@@ -60,6 +48,19 @@ std::unique_ptr<Node> parse_expression(size_t& cur, const std::vector<Token>& to
     if (cur >= tokens.size()) return nullptr;
 
     auto left = parse_primary(cur, tokens);
+
+    if(min_precedence == 0) {
+        if(tokens[cur].type == TokenType::ADD || tokens[cur].type == TokenType::SUB) {
+            auto op = tokens[cur++];
+            auto next = parse_primary(cur, tokens);
+
+            if(next == nullptr) {
+            std::cout << "Expected OPERAND";    //Placeholder
+            return nullptr;
+            }
+            left = std::make_unique<Node>(std::move(op), std::move(next));
+        }
+    }
 
     while(cur < tokens.size()) {
         int op_precedence = precedence(tokens[cur].type);
@@ -87,13 +88,9 @@ void print_ast(const std::unique_ptr<Node>& node, int depth = 0) {
     }
 
     std::cout << "|-- " << node->tk.value << '\n';
-
-    if (auto* unode = dynamic_cast<UNode*>(node.get())) {
-        print_ast(unode->child, depth + 1);
-    } else {
-        print_ast(node->left, depth + 1);
-        print_ast(node->right, depth + 1);
-    }
+    
+    print_ast(node->left, depth + 1);
+    print_ast(node->right, depth + 1);
 }
 
 
