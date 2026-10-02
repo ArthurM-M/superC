@@ -1,105 +1,134 @@
 #include "parser.h"
 
-int precedence(TokenType type) {
-    switch (type) {
-        case TokenType::MULT:
-        case TokenType::DIV:    return 12;
-        case TokenType::ADD:
-        case TokenType::SUB:    return 11;
-        case TokenType::SHL:
-        case TokenType::SHR:    return 10;
-        case TokenType::LESS:
-        case TokenType::LEQ:
-        case TokenType::GREATER:
-        case TokenType::GEQ:    return 9;
-        case TokenType::EQ:     return 8;
-        case TokenType::BIT_AND:return 7;
-        case TokenType::BIT_OR: return 6;
-        case TokenType::AND:    return 5;
-        case TokenType::OR:     return 4;
-        case TokenType::ASSIGN: return 1;
-        default:                return 0;
-    }
-}
+namespace {
+    const std::vector<Token>* g_tokens = nullptr;
+    size_t g_cursor = 0;
 
-bool is_operand(TokenType type) {
-    if(type == TokenType::IDENT || type == TokenType::NUMBER) return true;
-    return false;
-}
-
-std::unique_ptr<Node> parse_primary(size_t& cur, const std::vector<Token>& tokens) {
-    if(is_operand(tokens[cur].type)) {
-        return std::make_unique<Node>(tokens[cur++]);
+    bool is_at_end() {
+        return !g_tokens || g_cursor >= g_tokens->size();
     }
-    if(tokens[cur].type == TokenType::LEFT_PAR) {
-        cur++;
-        auto expr = parse_expression(cur, tokens);
-        if(expr == nullptr || tokens[cur].type != TokenType::RIGHT_PAR) {
-            std::cout << "Expected RIGHT_PAR";  //Placeholder
-        } else {
-            cur++;
+
+    const Token& peek() {
+        return (*g_tokens)[g_cursor];
+    }
+
+    Token advance() {
+        if (!is_at_end()) return (*g_tokens)[g_cursor++];
+        return (*g_tokens).back();
+    }
+
+    int precedence(TokenType type) {
+        switch (type) {
+            case TokenType::MULT:
+            case TokenType::DIV:    return 12;
+            case TokenType::ADD:
+            case TokenType::SUB:    return 11;
+            case TokenType::SHL:
+            case TokenType::SHR:    return 10;
+            case TokenType::LESS:
+            case TokenType::LEQ:
+            case TokenType::GREATER:
+            case TokenType::GEQ:    return 9;
+            case TokenType::EQ:     return 8;
+            case TokenType::BIT_AND:return 7;
+            case TokenType::BIT_OR: return 6;
+            case TokenType::AND:    return 5;
+            case TokenType::OR:     return 4;
+            case TokenType::ASSIGN: return 1;
+            default:                return 0;
         }
-        return expr;
     }
-    return nullptr; //Placeholder
-}
 
-std::unique_ptr<Node> parse_expression(size_t& cur, const std::vector<Token>& tokens, int min_precedence) {
-    if (cur >= tokens.size()) return nullptr;
+    bool is_operand(TokenType type) {
+        return type == TokenType::IDENT || type == TokenType::NUMBER;
+    }
 
-    auto left = parse_primary(cur, tokens);
+    std::unique_ptr<Node> parse_expression(int min_precedence = 0);
 
-    if(min_precedence == 0) {
-        if(tokens[cur].type == TokenType::ADD || tokens[cur].type == TokenType::SUB) {
-            auto op = tokens[cur++];
-            auto next = parse_primary(cur, tokens);
+    std::unique_ptr<Node> parse_primary() {
+        if (is_at_end()) return nullptr;
 
-            if(next == nullptr) {
-            std::cout << "Expected OPERAND";    //Placeholder
-            return nullptr;
+        if (is_operand(peek().type)) {
+            return std::make_unique<Node>(advance());
+        }
+
+        if (peek().type == TokenType::LEFT_PAR) {
+            advance();
+            auto expr = parse_expression();
+
+            if (is_at_end() || peek().type != TokenType::RIGHT_PAR) {
+                std::cout << "Expected RIGHT_PAR\n"; // Placeholder
+            } else {
+                advance();
             }
-            left = std::make_unique<Node>(std::move(op), std::move(next));
+            return expr;
         }
+
+        return nullptr; // Placeholder
     }
 
-    while(cur < tokens.size()) {
-        int op_precedence = precedence(tokens[cur].type);
-        if(op_precedence <= min_precedence) break;
+    std::unique_ptr<Node> parse_unary() {
+        if (!is_at_end() && (peek().type == TokenType::ADD || peek().type == TokenType::SUB)) {
+            Token op = advance();
+            auto operand = parse_unary();
 
-        Token op = tokens[cur++];
+            if (!operand) {
+                std::cout << "Expected OPERAND\n"; // Placeholder
+                return nullptr;
+            }
+            return std::make_unique<Node>(op, std::move(operand), nullptr);
+        }
 
-        auto right = parse_expression(cur, tokens, op_precedence);
-        left = std::make_unique<Node>(op, std::move(left), std::move(right));
-    }
-    return left;
-}
-
-std::unique_ptr<Node> parse_statement(size_t& cur, const std::vector<Token>& tokens) {
-    //if tokens[cur] == keyword -> parse_specific_keyword()
-    //else:
-    return parse_expression(cur, tokens);
-}
-
-void print_ast(const std::unique_ptr<Node>& node, int depth = 0) {
-    if (!node) return;
-
-    for (int i = 0; i < depth; i++) {
-        std::cout << "    ";
+        return parse_primary();
     }
 
-    std::cout << "|-- " << node->tk.value << '\n';
-    
-    print_ast(node->left, depth + 1);
-    print_ast(node->right, depth + 1);
-}
+    std::unique_ptr<Node> parse_expression(int min_precedence) {
+        auto left = parse_unary();
+        if (!left) return nullptr;
 
+        while (!is_at_end()) {
+            int op_precedence = precedence(peek().type);
+            if (op_precedence <= min_precedence) break;
+
+            Token op = advance();
+
+            auto right = parse_expression(op_precedence);
+            left = std::make_unique<Node>(op, std::move(left), std::move(right));
+        }
+
+        return left;
+    }
+
+    std::unique_ptr<Node> parse_statement() {
+        //if tokens[cur] == keyword -> parse_specific_keyword()
+        //else:
+        return parse_expression();
+    }
+
+    void print_ast(const std::unique_ptr<Node>& node, int depth = 0) {
+        if (!node) return;
+
+        for (int i = 0; i < depth; i++) {
+            std::cout << "    ";
+        }
+
+        std::cout << "|-- " << node->tk.value << '\n';
+
+        print_ast(node->left, depth + 1);
+        print_ast(node->right, depth + 1);
+    }
+
+}
 
 std::unique_ptr<Node> Parser::generate_ast(const std::vector<Token>& tokens) {
-    if(tokens.empty()) return nullptr;
+    if (tokens.empty()) return nullptr;
+    g_tokens = &tokens;
+    g_cursor = 0;
 
-    size_t cur = 0;
-    auto root = parse_statement(cur, tokens);
-
+    auto root = parse_statement();
     print_ast(root);
+
+    g_tokens = nullptr;
+    g_cursor = 0;
     return root;
 }
