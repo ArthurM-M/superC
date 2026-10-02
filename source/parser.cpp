@@ -1,3 +1,4 @@
+#include "error.h"
 #include "parser.h"
 
 namespace {
@@ -57,7 +58,7 @@ namespace {
             auto expr = parse_expression();
 
             if (is_at_end() || peek().type != TokenType::RIGHT_PAR) {
-                std::cout << "Expected RIGHT_PAR\n"; // Placeholder
+                Error::report(peek().position.y, peek().position.x, "Expected RIGHT_PAR");
             } else {
                 advance();
             }
