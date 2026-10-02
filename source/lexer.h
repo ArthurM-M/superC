@@ -54,7 +54,7 @@ enum class TokenType {
 #undef AS_ENUM_SPE
 
 struct TokenPosition {
-    std::size_t x, y;
+    std::size_t col, line;
 };
 
 struct Token {

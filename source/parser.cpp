@@ -58,7 +58,7 @@ namespace {
             auto expr = parse_expression();
 
             if (is_at_end() || peek().type != TokenType::RIGHT_PAR) {
-                Error::report(peek().position.y, peek().position.x, "Expected RIGHT_PAR");
+                Error::report(peek().position.line, peek().position.col, "Expected RIGHT_PAR");
             } else {
                 advance();
             }
@@ -74,7 +74,7 @@ namespace {
             auto operand = parse_unary();
 
             if (!operand) {
-                Error::report(peek().position.y, peek().position.x, "Expected OPERAND");
+                Error::report(peek().position.line, peek().position.col, "Expected OPERAND");
                 return nullptr;
             }
             return std::make_unique<Node>(op, std::move(operand), nullptr);

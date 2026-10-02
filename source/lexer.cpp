@@ -59,22 +59,22 @@ TokenType identify_token(char c) {
     }
 }
 
-Token emit_token(std::string &buf, size_t x, size_t y) {
+Token emit_token(std::string &buf, size_t col, size_t line) {
     auto type = identify_token(buf);
 
     if(type == TokenType::UNKNOWN) {
-        Error::report(y, x, "UNKNOWN token: '" + buf + "'.");
+        Error::report(line, col, "UNKNOWN token: '" + buf + "'.");
     }   
-    return {type, buf, {x, y}};
+    return {type, buf, {col, line}};
 }
 
-Token emit_token(char c, size_t x, size_t y) {
+Token emit_token(char c, size_t col, size_t line) {
     auto type = identify_token(c);
 
     if(type == TokenType::UNKNOWN) {
-        Error::report(y, x, std::string("UNKNOWN token: '") + c + "'.");
+        Error::report(line, col, std::string("UNKNOWN token: '") + c + "'.");
     }   
-    return {type, std::string(1, c), {x, y}};
+    return {type, std::string(1, c), {col, line}};
 }
 
 #undef AS_CASE_S_SYM
@@ -117,7 +117,7 @@ std::string token_to_str(TokenType type) {
 void print_tokens(const std::vector<Token>& tokenized_text) {
     for(auto x : tokenized_text) {
         std::cout << token_to_str(x.type) << "(" << x.value
-                  << ") pos x:" << x.position.x << " pos y:" << x.position.y << "\n";
+                  << ") pos x:" << x.position.col << " pos y:" << x.position.line << "\n";
     }
 }
 
@@ -125,22 +125,22 @@ void print_tokens(const std::vector<Token>& tokenized_text) {
 std::vector<Token> Lexer::tokenize(std::ifstream& file) {
     std::vector<Token> tokenized_text;
 
-    std::size_t pos_x = 1, pos_x_start = 1, pos_y = 1;
+    std::size_t cur_col = 1, col_start = 1, line = 1;
     char c; std::string buf;
     while(file.get(c)) {
         if(std::isspace(c)) {
             if(!buf.empty()) {  //Push buffer
-                tokenized_text.push_back(emit_token(buf, pos_x_start, pos_y));
+                tokenized_text.push_back(emit_token(buf, col_start, line));
                 buf.clear();
             }
             if(c == '\n') { //Next line positions
-                pos_x = 0;
-                pos_y++;
+                cur_col = 0;
+                line++;
             }
 
         } else if (is_s_symbol(c)){
             if(!buf.empty()) {  //Push buffer
-                tokenized_text.push_back(emit_token(buf, pos_x_start, pos_y));
+                tokenized_text.push_back(emit_token(buf, col_start, line));
                 buf.clear();
             }
 
@@ -154,29 +154,29 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
                     sym = aux;
                     file.get(c);
                     next = file.peek();
-                    pos_x++;
+                    cur_col++;
                 } else {
                     break;
                 }
             }
             
             if(sym.empty()) {
-                tokenized_text.push_back(emit_token(buf, pos_x_start, pos_y)); 
+                tokenized_text.push_back(emit_token(buf, col_start, line)); 
             } else {
-                tokenized_text.push_back(emit_token(buf, pos_x_start, pos_y)); 
+                tokenized_text.push_back(emit_token(buf, col_start, line)); 
             }
             
         } else {
             if(buf.empty()) {
-                pos_x_start = pos_x;    //Pos x start -> beginning of a token; pos x -> current position
+                col_start = cur_col;    //col start -> beginning of a token; cur col -> current position
             }
             buf.push_back(c);
         }
-        pos_x++;
+        cur_col++;
     }
     if (!buf.empty()) { //Tokenize the last string (chars processed in loop)
-        tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
+        tokenized_text.push_back({identify_token(buf), buf, {col_start, line}});
     }
-    tokenized_text.push_back({TokenType::END_OF_FILE, "EOF", {pos_x, pos_y}});
+    tokenized_text.push_back({TokenType::END_OF_FILE, "EOF", {cur_col, line}});
     return tokenized_text;
 }
