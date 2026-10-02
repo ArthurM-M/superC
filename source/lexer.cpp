@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "error.h"
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -53,8 +54,27 @@ TokenType identify_token(const std::string& buf) {
 TokenType identify_token(char c) { 
     switch (c) {
         SINGLE_SYMBOL_TOKENS(AS_CASE_S_SYM)
-        default:  return TokenType::UNKNOWN;
+        default:
+            return TokenType::UNKNOWN;
     }
+}
+
+Token emit_token(std::string &buf, size_t x, size_t y) {
+    auto type = identify_token(buf);
+
+    if(type == TokenType::UNKNOWN) {
+        Error::report(y, x, "UNKNOWN token: '" + buf + "'.");
+    }   
+    return {type, buf, {x, y}};
+}
+
+Token emit_token(char c, size_t x, size_t y) {
+    auto type = identify_token(c);
+
+    if(type == TokenType::UNKNOWN) {
+        Error::report(y, x, std::string("UNKNOWN token: '") + c + "'.");
+    }   
+    return {type, std::string(1, c), {x, y}};
 }
 
 #undef AS_CASE_S_SYM
@@ -110,7 +130,7 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
     while(file.get(c)) {
         if(std::isspace(c)) {
             if(!buf.empty()) {  //Push buffer
-                tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
+                tokenized_text.push_back(emit_token(buf, pos_x_start, pos_y));
                 buf.clear();
             }
             if(c == '\n') { //Next line positions
@@ -120,7 +140,7 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
 
         } else if (is_s_symbol(c)){
             if(!buf.empty()) {  //Push buffer
-                tokenized_text.push_back({identify_token(buf), buf, {pos_x_start, pos_y}});
+                tokenized_text.push_back(emit_token(buf, pos_x_start, pos_y));
                 buf.clear();
             }
 
@@ -141,14 +161,14 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
             }
             
             if(sym.empty()) {
-                tokenized_text.push_back({identify_token(c), std::string(1, c), {pos_x, pos_y}}); 
+                tokenized_text.push_back(emit_token(buf, pos_x_start, pos_y)); 
             } else {
-                tokenized_text.push_back({identify_token(sym), sym, {pos_x, pos_y}}); 
+                tokenized_text.push_back(emit_token(buf, pos_x_start, pos_y)); 
             }
             
         } else {
-            if(buf.empty()) {   //Update token x position
-                pos_x_start = pos_x;
+            if(buf.empty()) {
+                pos_x_start = pos_x;    //Pos x start -> beginning of a token; pos x -> current position
             }
             buf.push_back(c);
         }

@@ -74,7 +74,7 @@ namespace {
             auto operand = parse_unary();
 
             if (!operand) {
-                std::cout << "Expected OPERAND\n"; // Placeholder
+                Error::report(peek().position.y, peek().position.x, "Expected OPERAND");
                 return nullptr;
             }
             return std::make_unique<Node>(op, std::move(operand), nullptr);
