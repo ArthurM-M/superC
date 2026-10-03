@@ -63,7 +63,7 @@ Token emit_token(std::string &buf, size_t col, size_t line) {
     auto type = identify_token(buf);
 
     if(type == TokenType::UNKNOWN) {
-        Error::report(line, col, "UNKNOWN token: '" + buf + "'.");
+        Error::report(ErrorOrigin::Lexer, line, col, "UNKNOWN token: '" + buf + "'.");
     }   
     return {type, buf, {col, line}};
 }
@@ -72,7 +72,7 @@ Token emit_token(char c, size_t col, size_t line) {
     auto type = identify_token(c);
 
     if(type == TokenType::UNKNOWN) {
-        Error::report(line, col, std::string("UNKNOWN token: '") + c + "'.");
+        Error::report(ErrorOrigin::Lexer, line, col, std::string("UNKNOWN token: '") + c + "'.");
     }   
     return {type, std::string(1, c), {col, line}};
 }
@@ -161,9 +161,9 @@ std::vector<Token> Lexer::tokenize(std::ifstream& file) {
             }
             
             if(sym.empty()) {
-                tokenized_text.push_back(emit_token(buf, col_start, line)); 
+                tokenized_text.push_back(emit_token(c, col_start, line)); 
             } else {
-                tokenized_text.push_back(emit_token(buf, col_start, line)); 
+                tokenized_text.push_back(emit_token(sym, col_start, line)); 
             }
             
         } else {

@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "parser.h"
+#include "error.h"
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -14,5 +15,12 @@ int main() {
     auto tokens = Lexer::tokenize(file);
     print_tokens(tokens);
     Parser::generate_ast(tokens);
+
+    if(!Error::errors.empty()) {
+        for(auto err : Error::errors) {
+            std::cout << err;
+        }
+        return 1;
+    }
     return 0;
 }
